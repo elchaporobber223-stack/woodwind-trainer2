@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#17100c">
+<title>Woodwind Trainer</title>
+<style>
+:root{--bg:#17100c;--panel:#261b14;--panel2:#302219;--cream:#f2e6d3;--muted:#b9a995;--orange:#e6873c;--line:#4a3527;--green:#9bc89a}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--cream);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+main{width:min(100% - 24px,760px);margin:22px auto 50px}
+h1{font:700 clamp(27px,5vw,38px)/1.1 Georgia,serif;margin:0 0 14px}
+h2{font-size:18px;margin:0 0 12px}
+.muted{color:var(--muted);font-size:14px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);border:2px solid var(--cream);border-radius:14px;overflow:hidden;margin:10px 0}
+.tabs button,.modebar button{border:0;border-right:2px solid var(--cream);background:transparent;color:var(--cream);padding:12px 6px;font-weight:700;cursor:pointer}
+.tabs button:last-child,.modebar button:last-child{border-right:0}
+.tabs button.active,.modebar button.active{background:var(--cream);color:#21160f}
+.modebar{display:grid;grid-template-columns:repeat(3,1fr);border:2px solid var(--cream);border-radius:14px;overflow:hidden;margin:12px 0 16px}
+button{font:inherit} button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f6b16e;outline-offset:2px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin:14px 0}
+.staff-wrap{background:#211710;border-radius:12px;padding:12px 8px;margin:12px 0 8px}
+svg{display:block;width:100%;height:auto;max-height:220px}
+.note-info{text-align:center;font-size:22px;font-weight:800;margin:6px}
+.note-info small{display:block;font-size:13px;color:var(--muted);font-weight:500}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:360px;margin:14px auto}
+.hand{text-align:center;color:var(--muted);font-size:14px;margin-bottom:6px}
+.keygrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.key{background:transparent;border:2px solid var(--cream);color:var(--cream);border-radius:30px;min-height:52px;cursor:pointer;font-weight:800}
+.key span{display:block;color:var(--muted);font-size:11px;font-weight:600}
+.key.on{background:var(--orange);border-color:var(--orange);color:#1b1009}.key.on span{color:#321b0b}
+.actionrow{display:flex;gap:10px;margin-top:14px}
+.primary,.secondary{flex:1;border-radius:13px;padding:13px;border:2px solid var(--cream);font-weight:800;cursor:pointer}
+.primary{background:var(--orange);border-color:var(--orange);color:#1b1009}.secondary{background:transparent;color:var(--cream)}
+.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-weight:700;font-size:14px;margin-bottom:5px}
+select,input[type=text]{width:100%;background:#170f0b;color:var(--cream);border:1px solid #70523c;border-radius:9px;padding:10px;font:inherit}
+.accidentals{display:flex;flex-wrap:wrap;gap:8px}
+.acc{display:flex;align-items:center;gap:5px;background:#1b120d;border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-size:14px}
+.acc input{accent-color:var(--orange)}
+.range{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.feedback{min-height:24px;text-align:center;font-weight:700;margin-top:9px}
+.good{color:var(--green)}.bad{color:#ffb07d}
+.smallbtn{border:1px solid var(--line);background:#1b120d;color:var(--cream);padding:8px 10px;border-radius:9px;cursor:pointer}
+.pillrow{display:flex;flex-wrap:wrap;gap:7px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:6px 10px;color:var(--muted);font-size:12px}
+.hidden{display:none!important}
+@media(max-width:480px){main{width:min(100% - 16px,760px);margin:14px auto 30px}.panel{padding:12px}.tabs button,.modebar button{font-size:13px;padding:11px 3px}.settings-grid{grid-template-columns:1fr}.note-info{font-size:20px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Woodwind Trainer</h1>
+  <div class="tabs" role="group" aria-label="Instrument">
+    <button class="active" data-instrument="Flute">Flute</button><button data-instrument="Oboe">Oboe</button><button data-instrument="Sax">Sax</button><button data-instrument="Clarinet">Clarinet</button>
+  </div>
+  <div class="muted" id="instrumentHint">Also works for piccolo (same written fingerings as flute).</div>
+  <div class="modebar" role="group" aria-label="Practice mode">
+    <button class="active" data-mode="play">Play it</button><button data-mode="name">Name the note</button><button data-mode="staff">Read the staff</button>
+  </div>
+
+  <section class="panel">
+    <h2 id="prompt">Identify this note.</h2>
+    <div class="staff-wrap">
+      <svg id="staff" viewBox="0 0 520 205" role="img" aria-label="Treble clef music staff">
+        <g stroke="#f2e6d3" stroke-width="2.5">
+          <line x1="35" y1="65" x2="485" y2="65"/><line x1="35" y1="87" x2="485" y2="87"/><line x1="35" y1="109" x2="485" y2="109"/><line x1="35" y1="131" x2="485" y2="131"/><line x1="35" y1="153" x2="485" y2="153"/>
+        </g>
+        <text x="38" y="145" fill="#f2e6d3" font-size="104" font-family="serif">𝄞</text>
+        <g id="ledger" stroke="#f2e6d3" stroke-width="2.5"></g>
+        <g id="noteGraphic"><ellipse id="notehead" cx="315" cy="142" rx="14" ry="9" fill="#f2e6d3" transform="rotate(-22 315 142)"/><line id="stem" x1="328" y1="142" x2="328" y2="76" stroke="#f2e6d3" stroke-width="3"/></g>
+        <text id="accSymbol" x="285" y="146" fill="#f2e6d3" font-size="31"></text>
+      </svg>
+    </div>
+    <div class="note-info" id="noteDisplay">Ready?</div>
+    <div class="muted" id="subPrompt" style="text-align:center">Press “New note” to begin.</div>
+    <div id="playControls">
+      <div class="controls">
+        <div><div class="hand">Left hand</div><div class="keygrid">
+          <button class="key" data-finger="Q">Thumb <span>Q · 7</span></button>
+          <button class="key" data-finger="1">1 <span>A · 1</span></button>
+          <button class="key" data-finger="2">2 <span>S · 2</span></button>
+          <button class="key" data-finger="3">3 <span>D · 3</span></button>
+        </div></div>
+        <div><div class="hand">Right hand</div><div class="keygrid">
+          <button class="key" data-finger="4">4 <span>J · 4</span></button>
+          <button class="key" data-finger="5">5 <span>K · 5</span></button>
+          <button class="key" data-finger="6">6 <span>L · 6</span></button>
+          <button class="key" data-finger="P">Pinky <span>P · 9</span></button>
+        </div></div>
+      </div>
+      <div class="muted" style="text-align:center">Tap a key or use your computer keyboard. Number keys 1–6 toggle the numbered keys.</div>
+    </div>
+    <div id="answerControls" class="hidden">
+      <div class="settings-grid" style="max-width:390px;margin:12px auto">
+        <div><label for="answerNote">Your answer</label><select id="answerNote"></select></div>
+        <div><label for="answerOctave">Octave</label><select id="answerOctave"><option>3</option><option selected>4</option><option>5</option><option>6</option></select></div>
+      </div>
+    </div>
+    <div class="actionrow">
+      <button class="primary" id="checkBtn">Check</button><button class="secondary" id="skipBtn">New note</button>
+    </div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Customize your practice</h2>
+    <div class="settings-grid">
+      <div>
+        <label>Accidentals to include</label>
+        <div class="accidentals" id="accidentalChoices">
+          <label class="acc"><input type="checkbox" value="#" checked> Sharps ♯</label>
+          <label class="acc"><input type="checkbox" value="b" checked> Flats ♭</label>
+          <label class="acc"><input type="checkbox" value="natural" checked> Naturals ♮</label>
+        </div>
+        <p class="muted">Uncheck any accidental type to remove it from the note pool.</p>
+      </div>
+      <div>
+        <label>Note range</label>
+        <div class="range">
+          <div><label class="muted" for="minNote">Lowest note</label><select id="minNote"></select></div>
+          <div><label class="muted" for="maxNote">Highest note</label><select id="maxNote"></select></div>
+        </div>
+        <p class="muted">Choose the exact lowest and highest notes you want to practice.</p>
+      </div>
+    </div>
+    <div class="actionrow"><button class="primary" id="applySettings">Apply settings</button><button class="secondary" id="resetSettings">Reset</button></div>
+    <div class="feedback" id="settingsFeedback"></div>
+  </section>
+  <div class="pillrow"><span class="pill">Free to use</span><span class="pill">Works on phones & computers</span><span class="pill">No account needed</span></div>
+  <p class="muted">Note: this is a customizable note-reading and ear-training starter. The finger buttons are keyboard practice controls, not an instrument-verified fingering chart.</p>
+</main>
+<script>
+const naturalNames=['C','D','E','F','G','A','B'];
+const allNotes=[];
+for(let oct=3;oct<=6;oct++) for(const n of naturalNames) allNotes.push({name:n,oct,semi:{C:0,D:2,E:4,F:5,G:7,A:9,B:11}[n]+(oct+1)*12});
+const noteLabel=n=>n.name+n.oct;
+const accidentalChecks=[...document.querySelectorAll('#accidentalChoices input')];
+const minSel=document.getElementById('minNote'),maxSel=document.getElementById('maxNote'),answerSel=document.getElementById('answerNote');
+function fillSelect(sel,items,selected){sel.innerHTML='';items.forEach((x,i)=>{let o=document.createElement('option');o.value=x.value??x.label;o.textContent=x.label;if((x.value??x.label)===selected)o.selected=true;sel.append(o)})}
+const noteOptions=allNotes.map(n=>({value:noteLabel(n),label:noteLabel(n)}));
+fillSelect(minSel,noteOptions,'C4');fillSelect(maxSel,noteOptions,'C6');
+const answerOptions=[];for(let o=3;o<=6;o++)for(const n of naturalNames)answerOptions.push({value:n,label:n});
+fillSelect(answerSel,answerOptions,'C');
+let instrument='Flute',mode='play',current=null,activeFingers=new Set(),pool=[];
+const semitone={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+function accidentalPool(){
+ const enabled=accidentalChecks.filter(x=>x.checked).map(x=>x.value),arr=[];
+ for(const n of allNotes){arr.push({...n,acc:'',value:n.semi,display:noteLabel(n)});
+  if(enabled.includes('#')&&n.name!=='B'&&n.name!=='E')arr.push({...n,acc:'#',value:n.semi+1,display:n.name+'♯'+n.oct});
+  if(enabled.includes('b')&&n.name!=='C'&&n.name!=='F')arr.push({...n,acc:'b',value:n.semi-1,display:n.name+'♭'+n.oct});
+ }
+ return arr;
+}
+function staffY(note){
+ // Treble staff: bottom line E4 at y=153; each diatonic step is 11px.
+ const idx=note.oct*7+naturalNames.indexOf(note.name),e4=4*7+2;
+ return 153-(idx-e4)*11;
+}
+function renderStaff(note){
+ const y=staffY(note);document.getElementById('notehead').setAttribute('cy',y);
+ document.getElementById('stem').setAttribute('y1',y);document.getElementById('stem').setAttribute('y2',y-66);
+ document.getElementById('ledger').innerHTML='';
+ for(let ly=175;ly<=y+1;ly+=22) if(ly>153) document.getElementById('ledger').innerHTML+=`<line x1="294" y1="${ly}" x2="336" y2="${ly}"/>`;
+ for(let ly=43;ly>=y;ly-=22) if(ly<65) document.getElementById('ledger').innerHTML+=`<line x1="294" y1="${ly}" x2="336" y2="${ly}"/>`;
+ document.getElementById('accSymbol').textContent=note.acc==='#'?'♯':note.acc==='b'?'♭':'';
+}
+function chooseNote(){
+ const min=allNotes.findIndex(n=>noteLabel(n)===minSel.value),max=allNotes.findIndex(n=>noteLabel(n)===maxSel.value);
+ if(min>max){document.getElementById('settingsFeedback').textContent='The lowest note must be at or below the highest note.';return}
+ const allowed=accidentalPool().filter(n=>n.semi>=allNotes[min].semi&&n.semi<=allNotes[max].semi);
+ pool=allowed.length?allowed:accidentalPool().filter(n=>n.name==='C'&&n.oct===4);
+ current=pool[Math.floor(Math.random()*pool.length)];
+ activeFingers.clear();document.querySelectorAll('.key').forEach(b=>b.classList.remove('on'));
+ renderStaff(current);document.getElementById('feedback').textContent='';
+ document.getElementById('noteDisplay').textContent=mode==='name'?'Listen and name the note':mode==='staff'?'Read the staff and identify the note':current.display;
+ document.getElementById('subPrompt').textContent=mode==='play'?'Play the note shown on the staff.':mode==='name'?'Use the sound and staff to identify the note.':'Choose the note name and octave.';
+ document.getElementById('answerNote').value=current.name;document.getElementById('answerOctave').value=String(current.oct);
+ if(mode==='name'||mode==='staff'){document.getElementById('answerControls').classList.remove('hidden');document.getElementById('playControls').classList.add('hidden')}else{document.getElementById('answerControls').classList.add('hidden');document.getElementById('playControls').classList.remove('hidden')}
+ if(mode==='name')playTone(current.value);
+}
+function playTone(midi){
+ try{const ctx=new (window.AudioContext||window.webkitAudioContext)(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='sine';osc.frequency.value=440*Math.pow(2,(midi-69)/12);gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.16,ctx.currentTime+.03);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.7);osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.72);osc.onended=()=>ctx.close()}catch(e){}
+}
+function setMode(m){mode=m;document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));document.getElementById('prompt').textContent=m==='play'?'Press the keys to play this note.':m==='name'?'Listen and name the note.':'Read the staff.';chooseNote()}
+document.querySelectorAll('[data-instrument]').forEach(b=>b.onclick=()=>{instrument=b.dataset.instrument;document.querySelectorAll('[data-instrument]').forEach(x=>x.classList.toggle('active',x===b));document.getElementById('instrumentHint').textContent=instrument==='Flute'?'Also works for piccolo (same written fingerings).':instrument+' selected. Practice notes in the range you choose.'});
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+document.querySelectorAll('.key').forEach(b=>b.onclick=()=>{const f=b.dataset.finger;if(activeFingers.has(f))activeFingers.delete(f);else activeFingers.add(f);b.classList.toggle('on',activeFingers.has(f))});
+const keyMap={'q':'Q','a':'1','s':'2','d':'3','j':'4','k':'5','l':'6','p':'P','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6'};
+document.addEventListener('keydown',e=>{if(e.repeat||['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName))return;const f=keyMap[e.key.toLowerCase()];if(f){const b=document.querySelector(`[data-finger="${f}"]`);if(b)b.click()}});
+document.getElementById('checkBtn').onclick=()=>{
+ if(!current)return;
+ if(mode==='play'){document.getElementById('feedback').textContent='Finger keys selected: '+(activeFingers.size?[...activeFingers].join(', '):'none')+'. Use New note for another note.';return}
+ const guess=answerSel.value+document.getElementById('answerOctave').value;
+ const expected=current.name+current.oct;
+ document.getElementById('feedback').textContent=guess===expected?'Correct! Great work.':'Not quite — the note is '+current.display+'.';
+ document.getElementById('feedback').className='feedback '+(guess===expected?'good':'bad');
+};
+document.getElementById('skipBtn').onclick=chooseNote;
+document.getElementById('applySettings').onclick=()=>{const a=allNotes.findIndex(n=>noteLabel(n)===minSel.value),b=allNotes.findIndex(n=>noteLabel(n)===maxSel.value);if(a>b){document.getElementById('settingsFeedback').textContent='Lowest note must be lower than highest note.';return}document.getElementById('settingsFeedback').textContent='Settings applied.';chooseNote()};
+document.getElementById('resetSettings').onclick=()=>{accidentalChecks.forEach(x=>x.checked=true);minSel.value='C4';maxSel.value='C6';document.getElementById('settingsFeedback').textContent='Settings reset.';chooseNote()};
+chooseNote();
+</script>
+</body>
+</html>
